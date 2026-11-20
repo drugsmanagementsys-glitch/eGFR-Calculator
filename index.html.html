@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eGFR Calculator | NKF Clinical Tool</title>
+  <!-- Tailwind CSS for utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy-dark: #070e1b;
+      --navy-card: rgba(16, 31, 56, 0.94);
+      --navy-input: #0b1629;
+      --gold: #d4af37;
+      --gold-light: #f3d778;
+      --border-gold: rgba(212, 175, 55, 0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: #f4f7fb;
+      /* Default Neutral Navy Medical Background */
+      background:
+        radial-gradient(circle at 18% 18%, rgba(212, 175, 55, 0.14), transparent 38%),
+        radial-gradient(circle at 82% 82%, rgba(2, 132, 199, 0.2), transparent 45%),
+        linear-gradient(145deg, #060c18 0%, #0f1f3a 50%, #081224 100%);
+      transition: background 0.7s ease;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Dynamic Background Themes by KDIGO / NKF Stage */
+    body.theme-g1 {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.26), transparent 42%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.22), transparent 45%),
+        linear-gradient(145deg, #04170e 0%, #0a3320 50%, #051c11 100%);
+    }
+    body.theme-g2 {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(132, 204, 22, 0.24), transparent 42%),
+        radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.2), transparent 45%),
+        linear-gradient(145deg, #0d1a08 0%, #1d3612 50%, #0b1f1a 100%);
+    }
+    body.theme-g3a {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.28), transparent 42%),
+        radial-gradient(circle at 80% 80%, rgba(217, 119, 6, 0.22), transparent 45%),
+        linear-gradient(145deg, #1c1304 0%, #3d2808 50%, #1f1405 100%);
+    }
+    body.theme-g3b {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.32), transparent 42%),
+        radial-gradient(circle at 80% 80%, rgba(234, 88, 12, 0.25), transparent 45%),
+        linear-gradient(145deg, #210d04 0%, #4a1c08 50%, #240c04 100%);
+    }
+    body.theme-g4 {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(239, 68, 68, 0.36), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(185, 28, 28, 0.3), transparent 48%),
+        linear-gradient(145deg, #240505 0%, #520c0c 50%, #290606 100%);
+    }
+    body.theme-g5 {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(192, 38, 211, 0.36), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(126, 34, 206, 0.32), transparent 48%),
+        linear-gradient(145deg, #190524 0%, #3b0b54 50%, #1d0629 100%);
+    }
+
+    /* Subtle medical plus/grid watermark texture */
+    .medical-bg-pattern {
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(212, 175, 55, 0.12) 1px, transparent 1px),
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 36px 36px;
+      background-position: 0 0, 18px 18px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glass-card {
+      background: var(--navy-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--border-gold);
+      box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.6),
+        0 0 35px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: border-color 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    /* Card Glow Accents by Stage */
+    body.theme-g1 .glass-card { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(34, 197, 94, 0.22); }
+    body.theme-g2 .glass-card { border-color: rgba(163, 230, 53, 0.6); box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(132, 204, 22, 0.22); }
+    body.theme-g3a .glass-card { border-color: rgba(245, 158, 11, 0.65); box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(245, 158, 11, 0.25); }
+    body.theme-g3b .glass-card { border-color: rgba(249, 115, 22, 0.75); box-shadow: 0 25px 60px rgba(0,0,0,0.65), 0 0 45px rgba(249, 115, 22, 0.32); }
+    body.theme-g4 .glass-card { border-color: rgba(239, 68, 68, 0.85); box-shadow: 0 25px 60px rgba(0,0,0,0.7), 0 0 50px rgba(239, 68, 68, 0.38); }
+    body.theme-g5 .glass-card { border-color: rgba(217, 70, 239, 0.85); box-shadow: 0 25px 60px rgba(0,0,0,0.7), 0 0 50px rgba(192, 38, 211, 0.38); }
+
+    /* Tiny Cyberpunk Glitch Developer Credit */
+    .glitch-credit {
+      position: relative;
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #f3d778;
+      text-shadow: 0 0 6px rgba(212, 175, 55, 0.45);
+      user-select: none;
+    }
+
+    .glitch-credit::before,
+    .glitch-credit::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.85;
+    }
+
+    .glitch-credit::before {
+      color: #00f0ff;
+      z-index: -1;
+      animation: glitch-anim-1 2.6s infinite linear alternate-reverse;
+    }
+
+    .glitch-credit::after {
+      color: #ff2a6d;
+      z-index: -2;
+      animation: glitch-anim-2 2.1s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim-1 {
+      0%   { clip-path: inset(15% 0 70% 0); transform: translate(-1.5px, 0); }
+      20%  { clip-path: inset(65% 0 12% 0); transform: translate(1.5px, 0); }
+      40%  { clip-path: inset(35% 0 45% 0); transform: translate(-1px, 0.5px); }
+      60%  { clip-path: inset(80% 0 5% 0);  transform: translate(1px, -0.5px); }
+      80%  { clip-path: inset(10% 0 75% 0); transform: translate(-1.5px, 0); }
+      100% { clip-path: inset(50% 0 30% 0); transform: translate(1.5px, 0); }
+    }
+
+    @keyframes glitch-anim-2 {
+      0%   { clip-path: inset(70% 0 10% 0); transform: translate(1.5px, 0); }
+      25%  { clip-path: inset(12% 0 68% 0); transform: translate(-1.5px, 0); }
+      50%  { clip-path: inset(48% 0 32% 0); transform: translate(1px, -0.5px); }
+      75%  { clip-path: inset(22% 0 58% 0); transform: translate(-1px, 0.5px); }
+      100% { clip-path: inset(82% 0 4% 0);  transform: translate(1.5px, 0); }
+    }
+
+    /* Pulsing Critical Alert Banner */
+    @keyframes pulse-alert-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+    .critical-banner-pulse {
+      animation: pulse-alert-border 1.8s infinite;
+    }
+
+    .gold-input {
+      background-color: var(--navy-input);
+      border: 1.5px solid var(--border-gold);
+      color: #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .gold-input:focus {
+      outline: none;
+      border-color: var(--gold-light);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    }
+
+    .gold-input::placeholder {
+      color: rgba(158, 176, 204, 0.45);
+    }
+
+    .result-panel {
+      background: linear-gradient(180deg, rgba(11, 22, 41, 0.96), rgba(7, 15, 29, 0.98));
+      border: 1.5px solid var(--gold);
+      box-shadow: inset 0 0 22px rgba(212, 175, 55, 0.12);
+    }
+
+    /* KDIGO Staging Colors */
+    .stage-g1 { background-color: #1b8a3c; }
+    .stage-g2 { background-color: #82b324; }
+    .stage-g3a { background-color: #e09612; }
+    .stage-g3b { background-color: #dc5b16; }
+    .stage-g4 { background-color: #c42525; }
+    .stage-g5 { background-color: #741b9c; }
+
+    .gfr-row {
+      opacity: 0.78;
+      transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .gfr-row.active-stage {
+      opacity: 1;
+      transform: scale(1.015);
+      box-shadow: 0 0 0 2px #ffffff, 0 4px 14px rgba(0, 0, 0, 0.45);
+      position: relative;
+      z-index: 2;
+      font-weight: 700;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #e2bf49 0%, #c49b24 100%);
+      color: #081224;
+      border: 1.5px solid #f3d778;
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
+    }
+
+    .btn-gold:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-gold {
+      background: rgba(11, 22, 41, 0.7);
+      color: #f4f7fb;
+      border: 1.5px solid var(--border-gold);
+    }
+
+    .btn-outline-gold:hover {
+      background: rgba(212, 175, 55, 0.16);
+      border-color: var(--gold-light);
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070e1b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(212, 175, 55, 0.4);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 sm:p-6">
+  <!-- Background clinical grid texture -->
+  <div class="medical-bg-pattern" aria-hidden="true"></div>
+
+  <!-- Main Wrapper -->
+  <div class="w-full max-w-xl relative z-10 flex flex-col items-center">
+
+    <!-- Tiny Glitch Developer Credit Above the Page/Card -->
+    <div class="mb-2.5 px-3 py-1 rounded-full bg-slate-950/80 border border-amber-400/25 shadow-md backdrop-blur-sm">
+      <span class="glitch-credit" data-text="Dev by DaNuka (D2F Systems)">
+        Dev by DaNuka (D2F Systems)
+      </span>
+    </div>
+
+    <!-- Floating Non-Blocking Critical Report Toast Popup -->
+    <div
+      id="criticalToast"
+      role="alert"
+      class="hidden fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-50 rounded-2xl bg-red-950/95 border-2 border-red-400 text-white p-4 shadow-2xl backdrop-blur-md transition-all"
+    >
+      <div class="flex items-start gap-3">
+        <div class="p-2 rounded-full bg-red-500/25 text-red-300 shrink-0 mt-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-red-200">
+            Critical Renal Alert
+          </h3>
+          <p id="criticalToastText" class="text-xs text-red-100/95 mt-1 leading-relaxed">
+            Severe eGFR reduction detected. Immediate clinical review recommended.
+          </p>
+        </div>
+        <button
+          type="button"
+          onclick="dismissCriticalToast()"
+          class="text-red-300 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
+          aria-label="Close Alert"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Calculator Card -->
+    <main class="w-full glass-card rounded-3xl p-5 sm:p-7">
+
+      <!-- Header Section -->
+      <header class="flex items-center gap-4 pb-5 mb-5 border-b border-white/10">
+        <!-- Small Circular Logo Badge with Red Kidneys & Blue Human Silhouette -->
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-[#d4af37] bg-white/95 flex items-center justify-center shadow-lg shrink-0 p-1.5" title="Kidney Care Emblem">
+          <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-label="Kidney Care Logo">
+            <!-- Left Red Kidney -->
+            <path d="M48 26 C26 22, 12 42, 14 64 C16 84, 30 96, 46 92 C54 90, 56 80, 51 73 C47 68, 44 64, 44 58 C44 52, 48 48, 52 44 C57 39, 55 28, 48 26 Z" fill="#e51c23"/>
+            <!-- Left Kidney Notch Highlight -->
+            <path d="M16 50 Q24 51 28 49" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+            <path d="M46 52 Q38 56 36 63" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+            <!-- Right Red Kidney -->
+            <path d="M72 26 C94 22, 108 42, 106 64 C104 84, 90 96, 74 92 C66 90, 64 80, 69 73 C73 68, 76 64, 76 58 C76 52, 72 48, 68 44 C63 39, 65 28, 72 26 Z" fill="#e51c23"/>
+            <!-- Right Kidney Notch Highlight -->
+            <path d="M104 50 Q96 51 92 49" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+            <path d="M74 52 Q82 56 84 63" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+            <!-- Central Blue Human Head -->
+            <circle cx="60" cy="48" r="7.5" fill="#009fe3"/>
+
+            <!-- Central Blue Human Body / Raised Arms Curves -->
+            <path d="M27 52 C42 56, 53 63, 55 75 C57 86, 56 97, 58 107 C56 96, 52 86, 51 76 C50 66, 41 59, 27 52 Z" fill="#009fe3"/>
+            <path d="M93 52 C78 56, 67 63, 65 75 C63 86, 64 97, 62 107 C64 96, 68 86, 69 76 C70 66, 79 59, 93 52 Z" fill="#009fe3"/>
+          </svg>
+        </div>
+
+        <!-- Title & NKF Guideline Subtitle -->
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-none">
+            eGFR
+            <span class="block text-base sm:text-lg font-semibold tracking-[0.2em] text-[#d4af37] mt-1">
+              CALCULATOR
+            </span>
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1.5">
+            National Kidney Foundation (NKF) Clinical Guidelines
+          </p>
+        </div>
+      </header>
+
+      <!-- Clinical Input Form -->
+      <form id="egfrForm" onsubmit="event.preventDefault(); calculateEGFR();">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+
+          <!-- Age Input (Blank by default) -->
+          <div class="flex flex-col gap-1.5">
+            <label for="age" class="text-xs font-medium text-slate-300 flex justify-between items-center">
+              <span>Age (Years &ge; 18)</span>
+              <span class="text-[11px] text-amber-300/80">Adult</span>
+            </label>
+            <input
+              type="number"
+              id="age"
+              min="18"
+              max="120"
+              placeholder="e.g. 54"
+              required
+              oninput="calculateEGFR()"
+              class="gold-input w-full px-3.5 py-2.5 rounded-xl text-base font-medium"
+            />
+          </div>
+
+          <!-- Sex Selector -->
+          <div class="flex flex-col gap-1.5">
+            <label for="sex" class="text-xs font-medium text-slate-300">
+              Sex
+            </label>
+            <select
+              id="sex"
+              onchange="calculateEGFR()"
+              class="gold-input w-full px-3.5 py-2.5 rounded-xl text-base font-medium cursor-pointer"
+            >
+              <option value="male" selected>Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <!-- Serum Creatinine Input with Unit Toggle (Blank by default) -->
+          <div class="flex flex-col gap-1.5">
+            <label for="creatinine" class="text-xs font-medium text-slate-300 flex justify-between items-center">
+              <span>Serum Creatinine</span>
+              <button
+                type="button"
+                id="unitBtn"
+                onclick="toggleUnit()"
+                class="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-amber-400/15 border border-amber-400/50 text-amber-200 hover:bg-amber-400/25 transition cursor-pointer"
+                title="Click to switch between mg/dL and µmol/L"
+              >
+                mg/dL ⇄
+              </button>
+            </label>
+            <input
+              type="number"
+              id="creatinine"
+              step="0.01"
+              min="0.1"
+              max="3000"
+              placeholder="e.g. 1.1"
+              required
+              oninput="calculateEGFR()"
+              class="gold-input w-full px-3.5 py-2.5 rounded-xl text-base font-medium"
+            />
+          </div>
+
+          <!-- Optional Cystatin C Input (Blank by default) -->
+          <div class="flex flex-col gap-1.5">
+            <label for="cystatin" class="text-xs font-medium text-slate-300 flex justify-between items-center">
+              <span>Cystatin C (mg/L)</span>
+              <span class="text-[11px] text-amber-300/80">Optional</span>
+            </label>
+            <input
+              type="number"
+              id="cystatin"
+              step="0.01"
+              min="0.1"
+              max="20"
+              placeholder="e.g. 0.95"
+              oninput="calculateEGFR()"
+              class="gold-input w-full px-3.5 py-2.5 rounded-xl text-base font-medium"
+            />
+          </div>
+
+          <!-- Optional uACR Selector for KDIGO Risk Stratification -->
+          <div class="sm:col-span-2 flex flex-col gap-1.5">
+            <label for="uacr" class="text-xs font-medium text-slate-300 flex justify-between items-center">
+              <span>Urine Albumin-to-Creatinine Ratio (uACR)</span>
+              <span class="text-[11px] text-amber-300/80">Optional (NKF Risk Level)</span>
+            </label>
+            <select
+              id="uacr"
+              onchange="calculateEGFR()"
+              class="gold-input w-full px-3.5 py-2.5 rounded-xl text-sm sm:text-base font-medium cursor-pointer"
+            >
+              <option value="none" selected>Not provided — Show GFR Stage Only</option>
+              <option value="A1">A1: &lt; 30 mg/g (Normal to Mildly Increased)</option>
+              <option value="A2">A2: 30 – 300 mg/g (Moderately Increased)</option>
+              <option value="A3">A3: &gt; 300 mg/g (Severely Increased)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Result Box -->
+        <div id="resultPanel" class="result-panel rounded-2xl p-4 sm:p-5 text-center mb-4 transition-transform duration-200">
+          <div id="equationLabel" class="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-amber-300 mb-1">
+            2021 CKD-EPI Creatinine (Race-Free)
+          </div>
+          <div id="resultDisplay" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Enter Age &amp; Creatinine
+          </div>
+          <div class="flex flex-wrap items-center justify-center gap-2 mt-2.5">
+            <span id="stageBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-slate-200 border border-white/15">
+              Awaiting Clinical Inputs
+            </span>
+            <span id="riskBadge" class="hidden px-3 py-1 rounded-full text-xs font-bold shadow"></span>
+          </div>
+        </div>
+
+        <!-- Prominent Critical / Bad Report Clinical Alert Banner -->
+        <div
+          id="criticalAlertBanner"
+          role="alert"
+          class="hidden critical-banner-pulse mb-5 rounded-2xl bg-gradient-to-r from-red-950/95 via-red-900/90 to-rose-950/95 border-2 border-red-400/90 p-3.5 sm:p-4 text-left"
+        >
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-xl bg-red-500/25 border border-red-400/40 text-red-200 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 id="criticalBannerTitle" class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-red-200">
+                Critical Renal Impairment Alert
+              </h3>
+              <p id="criticalBannerMessage" class="text-xs text-red-100/95 mt-1 leading-relaxed">
+                Significantly reduced kidney function detected. Urgent nephrology consultation, medication dose review, and electrolyte/acid-base monitoring advised per NKF/KDIGO guidelines.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- GFR Categories Table -->
+        <div class="mb-5">
+          <h2 class="text-center text-xs font-semibold uppercase tracking-widest text-slate-300 mb-2.5">
+            GFR Categories (NKF / KDIGO Staging)
+          </h2>
+          <div class="rounded-xl overflow-hidden border border-white/15 shadow-inner">
+            <table class="w-full border-collapse text-xs sm:text-sm" id="gfrTable">
+              <tbody>
+                <tr class="gfr-row stage-g1" data-stage="G1">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">&ge; 90</td>
+                  <td class="py-2 px-3 text-white font-medium">G1: Normal or High*</td>
+                </tr>
+                <tr class="gfr-row stage-g2" data-stage="G2">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">60 – 89</td>
+                  <td class="py-2 px-3 text-white font-medium">G2: Mildly Decreased*</td>
+                </tr>
+                <tr class="gfr-row stage-g3a" data-stage="G3a">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">45 – 59</td>
+                  <td class="py-2 px-3 text-white font-medium">G3a: Mildly to Moderately Decreased</td>
+                </tr>
+                <tr class="gfr-row stage-g3b" data-stage="G3b">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">30 – 44</td>
+                  <td class="py-2 px-3 text-white font-medium">G3b: Moderately to Severely Decreased</td>
+                </tr>
+                <tr class="gfr-row stage-g4" data-stage="G4">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">15 – 29</td>
+                  <td class="py-2 px-3 text-white font-medium">G4: Severely Decreased</td>
+                </tr>
+                <tr class="gfr-row stage-g5" data-stage="G5">
+                  <td class="w-24 sm:w-28 py-2 px-3 font-bold text-center border-r border-white/25 text-white">&lt; 15</td>
+                  <td class="py-2 px-3 text-white font-medium">G5: Kidney Failure</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Single Centered Action Button: Reset -->
+        <div class="flex justify-center">
+          <button
+            type="button"
+            id="resetBtn"
+            onclick="resetForm()"
+            class="btn-outline-gold w-full sm:w-56 py-3 px-5 rounded-full text-xs sm:text-sm font-bold tracking-wide uppercase text-amber-200 hover:text-white active:scale-95 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+            title="Clear all inputs and reset theme"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <span>Reset</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- NKF Clinical Disclaimer Footer -->
+      <footer class="mt-5 pt-3.5 border-t border-white/10 text-[11px] leading-relaxed text-slate-300/90">
+        <p>
+          <strong class="text-amber-300">NKF Clinical Guidance (<a href="https://www.kidney.org/professionals/kdoqi/gfr_calculator" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-200">www.kidney.org</a>):</strong>
+          Implements the race-free 2021 CKD-EPI equations for adults (&ge;18 years). Entering Cystatin C activates the combined 2021 CKD-EPI Creatinine–Cystatin C formula for confirmatory assessment.
+        </p>
+        <p class="mt-1 text-slate-400">
+          *In the absence of persistent kidney damage markers (e.g., uACR &ge;30 mg/g for &gt;3 months), G1 and G2 alone do not fulfill criteria for CKD.
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    let currentUnit = 'mg/dL';
+    let lastAlertSignature = '';
+    let toastTimeout = null;
+
+    /**
+     * Handles explicit Calculate button clicks: runs calculation,
+     * pulses the result panel, and re-surfaces critical alerts if applicable.
+     */
+    function triggerManualCalculate(event) {
+      if (event) event.preventDefault();
+      lastAlertSignature = '';
+      calculateEGFR();
+
+      const panel = document.getElementById('resultPanel');
+      if (panel) {
+        panel.classList.add('scale-[1.02]');
+        setTimeout(() => panel.classList.remove('scale-[1.02]'), 180);
+      }
+    }
+
+    /**
+     * Toggles Serum Creatinine unit between mg/dL and µmol/L,
+     * updates placeholder example, and converts any entered numeric value.
+     */
+    function toggleUnit() {
+      const input = document.getElementById('creatinine');
+      const btn = document.getElementById('unitBtn');
+      const val = parseFloat(input.value);
+
+      if (currentUnit === 'mg/dL') {
+        currentUnit = 'µmol/L';
+        btn.textContent = 'µmol/L ⇄';
+        input.placeholder = 'e.g. 97.2';
+        if (!isNaN(val)) {
+          input.value = (val * 88.4).toFixed(1);
+        }
+      } else {
+        currentUnit = 'mg/dL';
+        btn.textContent = 'mg/dL ⇄';
+        input.placeholder = 'e.g. 1.1';
+        if (!isNaN(val)) {
+          input.value = (val / 88.4).toFixed(2);
+        }
+      }
+      calculateEGFR();
+    }
+
+    /**
+     * Resets UI to neutral state when inputs are blank or invalid.
+     */
+    function setNeutralState(promptTitle, badgeText) {
+      document.getElementById('resultDisplay').textContent = promptTitle;
+      document.getElementById('stageBadge').textContent = badgeText;
+      document.getElementById('riskBadge').classList.add('hidden');
+      document.getElementById('criticalAlertBanner').classList.add('hidden');
+      dismissCriticalToast();
+      lastAlertSignature = '';
+
+      // Clear background theme classes
+      document.body.classList.remove('theme-g1', 'theme-g2', 'theme-g3a', 'theme-g3b', 'theme-g4', 'theme-g5');
+
+      // Remove active highlight from table rows
+      document.querySelectorAll('#gfrTable tbody tr').forEach(row => {
+        row.classList.remove('active-stage');
+      });
+    }
+
+    /**
+     * Computes eGFR using NKF-recommended 2021 CKD-EPI equations:
+     * 1) 2021 CKD-EPI Creatinine (race-free) when only Creatinine is provided
+     * 2) 2021 CKD-EPI Creatinine-Cystatin C when Cystatin C is also provided
+     */
+    function calculateEGFR() {
+      const ageRaw = document.getElementById('age').value.trim();
+      const scrRaw = document.getElementById('creatinine').value.trim();
+      const scysRaw = document.getElementById('cystatin').value.trim();
+
+      const age = parseFloat(ageRaw);
+      let scr = parseFloat(scrRaw);
+      const scys = parseFloat(scysRaw);
+      const sex = document.getElementById('sex').value;
+      const uacr = document.getElementById('uacr').value;
+
+      // Update equation label preview even before numbers are filled
+      if (!isNaN(scys) && scys > 0) {
+        document.getElementById('equationLabel').textContent = '2021 CKD-EPI Creatinine–Cystatin C';
+      } else {
+        document.getElementById('equationLabel').textContent = '2021 CKD-EPI Creatinine (Race-Free)';
+      }
+
+      // If Age or Creatinine is blank, keep clean neutral state
+      if (ageRaw === '' || scrRaw === '') {
+        setNeutralState('Enter Age & Creatinine', 'Awaiting Clinical Inputs');
+        return;
+      }
+
+      if (isNaN(age) || age < 18) {
+        setNeutralState('Age must be ≥ 18 yrs', 'Adult Formula Only');
+        return;
+      }
+
+      if (isNaN(scr) || scr <= 0) {
+        setNeutralState('Enter Valid Creatinine', 'Invalid Creatinine Value');
+        return;
+      }
+
+      // Convert µmol/L to mg/dL if needed
+      if (currentUnit === 'µmol/L') {
+        scr = scr / 88.4;
+      }
+
+      let egfr = 0;
+
+      if (!isNaN(scys) && scys > 0) {
+        // 2021 CKD-EPI Creatinine-Cystatin C Combined Equation
+        const kappa = sex === 'female' ? 0.7 : 0.9;
+        const alpha = sex === 'female' ? -0.219 : -0.144;
+        const sexFactor = sex === 'female' ? 0.963 : 1.0;
+
+        const minScr = Math.min(scr / kappa, 1);
+        const maxScr = Math.max(scr / kappa, 1);
+        const minCys = Math.min(scys / 0.8, 1);
+        const maxCys = Math.max(scys / 0.8, 1);
+
+        egfr = 135 *
+          Math.pow(minScr, alpha) *
+          Math.pow(maxScr, -0.544) *
+          Math.pow(minCys, -0.323) *
+          Math.pow(maxCys, -0.778) *
+          Math.pow(0.9961, age) *
+          sexFactor;
+      } else {
+        // 2021 CKD-EPI Creatinine Equation (Race-Free Standard)
+        const kappa = sex === 'female' ? 0.7 : 0.9;
+        const alpha = sex === 'female' ? -0.241 : -0.302;
+        const sexFactor = sex === 'female' ? 1.012 : 1.0;
+
+        const minScr = Math.min(scr / kappa, 1);
+        const maxScr = Math.max(scr / kappa, 1);
+
+        egfr = 142 *
+          Math.pow(minScr, alpha) *
+          Math.pow(maxScr, -1.200) *
+          Math.pow(0.9938, age) *
+          sexFactor;
+      }
+
+      const rounded = Math.round(egfr);
+      document.getElementById('resultDisplay').textContent = `${rounded} mL/min/1.73m²`;
+
+      updateStagingAndRisk(rounded, uacr);
+    }
+
+    /**
+     * Updates dynamic background color theme, highlights the active KDIGO GFR stage,
+     * displays NKF risk badge, and triggers critical alerts for severe/bad reports.
+     */
+    function updateStagingAndRisk(egfr, uacr) {
+      let stage = 'G1';
+      let label = 'G1: Normal or High';
+      let themeClass = 'theme-g1';
+
+      if (egfr >= 90) {
+        stage = 'G1';
+        label = 'G1: Normal or High';
+        themeClass = 'theme-g1';
+      } else if (egfr >= 60) {
+        stage = 'G2';
+        label = 'G2: Mildly Decreased';
+        themeClass = 'theme-g2';
+      } else if (egfr >= 45) {
+        stage = 'G3a';
+        label = 'G3a: Mildly to Moderately Decreased';
+        themeClass = 'theme-g3a';
+      } else if (egfr >= 30) {
+        stage = 'G3b';
+        label = 'G3b: Moderately to Severely Decreased';
+        themeClass = 'theme-g3b';
+      } else if (egfr >= 15) {
+        stage = 'G4';
+        label = 'G4: Severely Decreased';
+        themeClass = 'theme-g4';
+      } else {
+        stage = 'G5';
+        label = 'G5: Kidney Failure';
+        themeClass = 'theme-g5';
+      }
+
+      // Apply dynamic page background theme
+      document.body.classList.remove('theme-g1', 'theme-g2', 'theme-g3a', 'theme-g3b', 'theme-g4', 'theme-g5');
+      document.body.classList.add(themeClass);
+
+      document.getElementById('stageBadge').textContent = label;
+
+      // Highlight matching GFR stage row
+      document.querySelectorAll('#gfrTable tbody tr').forEach(row => {
+        row.classList.toggle('active-stage', row.dataset.stage === stage);
+      });
+
+      // NKF / KDIGO Prognosis Risk Level based on GFR + uACR
+      const riskBadge = document.getElementById('riskBadge');
+      let isVeryHighRisk = false;
+
+      if (uacr === 'none') {
+        riskBadge.classList.add('hidden');
+      } else {
+        riskBadge.classList.remove('hidden');
+
+        let riskText = '';
+        let bgClasses = [];
+
+        if ((stage === 'G1' || stage === 'G2') && uacr === 'A1') {
+          riskText = 'NKF Risk: Low (No CKD if no other markers)';
+          bgClasses = ['bg-emerald-600', 'text-white'];
+        } else if (((stage === 'G1' || stage === 'G2') && uacr === 'A2') || (stage === 'G3a' && uacr === 'A1')) {
+          riskText = 'NKF Risk: Moderately Increased';
+          bgClasses = ['bg-amber-400', 'text-slate-950'];
+        } else if (((stage === 'G1' || stage === 'G2') && uacr === 'A3') || (stage === 'G3a' && uacr === 'A2') || (stage === 'G3b' && uacr === 'A1')) {
+          riskText = 'NKF Risk: High';
+          bgClasses = ['bg-orange-600', 'text-white'];
+        } else {
+          riskText = 'NKF Risk: Very High';
+          bgClasses = ['bg-red-700', 'text-white'];
+          isVeryHighRisk = true;
+        }
+
+        riskBadge.className = 'px-3 py-1 rounded-full text-xs font-bold shadow ' + bgClasses.join(' ');
+        riskBadge.textContent = riskText;
+      }
+
+      // Trigger Critical / Bad Report Alert for G3b, G4, G5 (eGFR < 45) or Very High Risk
+      const isBadReport = (egfr < 45) || isVeryHighRisk;
+      const alertBanner = document.getElementById('criticalAlertBanner');
+
+      if (isBadReport) {
+        let title = 'Critical Renal Alert — ' + label;
+        let detail = 'Moderately to severely decreased eGFR (<45 mL/min/1.73m²). Review nephrotoxic medications, adjust renal dosing, and consider nephrology referral per NKF guidelines.';
+
+        if (stage === 'G5') {
+          title = 'CRITICAL ALERT: Stage G5 Kidney Failure (<15)';
+          detail = 'Severe kidney failure detected. Urgent nephrology evaluation and renal replacement therapy (dialysis/transplant) planning required immediately.';
+        } else if (stage === 'G4') {
+          title = 'SEVERE ALERT: Stage G4 Severely Decreased eGFR';
+          detail = 'Severely reduced kidney function (15–29 mL/min/1.73m²). Immediate nephrology referral and complication management strongly recommended.';
+        } else if (isVeryHighRisk && egfr >= 45) {
+          title = 'HIGH-RISK CKD ALERT: Very High KDIGO Prognosis Risk';
+          detail = 'Severe albuminuria (uACR >300 mg/g) with reduced GFR indicates Very High risk of CKD progression. Urgent specialist management advised.';
+        }
+
+        document.getElementById('criticalBannerTitle').textContent = title;
+        document.getElementById('criticalBannerMessage').textContent = detail;
+        alertBanner.classList.remove('hidden');
+
+        // Show floating toast warning when entering/changing to a bad report stage
+        const signature = `${stage}-${isVeryHighRisk}`;
+        if (signature !== lastAlertSignature) {
+          lastAlertSignature = signature;
+          showCriticalToast(title, detail);
+        }
+      } else {
+        alertBanner.classList.add('hidden');
+        dismissCriticalToast();
+        lastAlertSignature = '';
+      }
+    }
+
+    function showCriticalToast(title, message) {
+      const toast = document.getElementById('criticalToast');
+      toast.querySelector('h3').textContent = title;
+      document.getElementById('criticalToastText').textContent = message;
+      toast.classList.remove('hidden');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 6500);
+    }
+
+    function dismissCriticalToast() {
+      const toast = document.getElementById('criticalToast');
+      if (toast) toast.classList.add('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+    }
+
+    /**
+     * Resets all inputs back to completely blank defaults.
+     */
+    function resetForm() {
+      currentUnit = 'mg/dL';
+      document.getElementById('unitBtn').textContent = 'mg/dL ⇄';
+      document.getElementById('age').value = '';
+      document.getElementById('sex').value = 'male';
+      document.getElementById('creatinine').value = '';
+      document.getElementById('creatinine').placeholder = 'e.g. 1.1';
+      document.getElementById('cystatin').value = '';
+      document.getElementById('uacr').value = 'none';
+      calculateEGFR();
+    }
+
+    // Initialize in clean blank state on page load
+    window.addEventListener('DOMContentLoaded', calculateEGFR);
+  </script>
+</body>
+</html>
